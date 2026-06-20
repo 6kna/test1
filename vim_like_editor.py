@@ -26,7 +26,12 @@ class EditorCore:
             editor.status_message = f"Opened {filename}"
         return editor
 
-    def _clamp_cursor(self) -> None:
+    def clamp_cursor(self) -> None:
+        if not self.lines:
+            self.lines = [""]
+            self.row = 0
+            self.col = 0
+            return
         self.row = max(0, min(self.row, len(self.lines) - 1))
         line_len = len(self.lines[self.row])
         if self.mode == "NORMAL":
@@ -47,19 +52,19 @@ class EditorCore:
 
     def move_left(self) -> None:
         self.col -= 1
-        self._clamp_cursor()
+        self.clamp_cursor()
 
     def move_right(self) -> None:
         self.col += 1
-        self._clamp_cursor()
+        self.clamp_cursor()
 
     def move_up(self) -> None:
         self.row -= 1
-        self._clamp_cursor()
+        self.clamp_cursor()
 
     def move_down(self) -> None:
         self.row += 1
-        self._clamp_cursor()
+        self.clamp_cursor()
 
     def enter_insert_mode(self) -> None:
         self.mode = "INSERT"
@@ -113,7 +118,7 @@ class EditorCore:
         if self.row < len(self.lines) - 1:
             self.lines[self.row] += self.lines.pop(self.row + 1)
             self.dirty = True
-        self._clamp_cursor()
+        self.clamp_cursor()
 
     def save(self) -> bool:
         if not self.filename:
@@ -218,7 +223,7 @@ def _draw(stdscr: "curses._CursesWindow", editor: EditorCore) -> None:
     stdscr.addnstr(height - 1, 0, status.ljust(width), width - 1)
     stdscr.attroff(curses.A_REVERSE)
 
-    editor._clamp_cursor()
+    editor.clamp_cursor()
     cursor_y = min(editor.row, max_rows - 1)
     cursor_x = min(editor.col, max(0, width - 2))
     stdscr.move(cursor_y, cursor_x)
