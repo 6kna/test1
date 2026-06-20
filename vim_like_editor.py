@@ -125,8 +125,8 @@ class EditorCore:
             self.status_message = "Cannot save: no filename provided"
             return False
         content = "\n".join(self.lines)
-        has_text_content = len(self.lines) > 1 or (len(self.lines) == 1 and self.lines[0] != "")
-        if has_text_content:
+        has_content = len(self.lines) > 1 or (len(self.lines) == 1 and self.lines[0] != "")
+        if has_content:
             content += "\n"
         with open(self.filename, "w", encoding="utf-8") as f:
             f.write(content)
