@@ -87,8 +87,10 @@ void editorSetStatusMessage(const char *fmt, ...);
 void editorRefreshScreen(void);
 
 void die(const char *s) {
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
+  ssize_t ignored = write(STDOUT_FILENO, "\x1b[2J", 4);
+  (void)ignored;
+  ignored = write(STDOUT_FILENO, "\x1b[H", 3);
+  (void)ignored;
   perror(s);
   exit(1);
 }
@@ -588,7 +590,8 @@ void editorRefreshScreen(void) {
   abAppend(&ab, buf, (int)strlen(buf));
 
   abAppend(&ab, "\x1b[?25h", 6);
-  write(STDOUT_FILENO, ab.b, (size_t)ab.size);
+  ssize_t ignored = write(STDOUT_FILENO, ab.b, (size_t)ab.size);
+  (void)ignored;
   abFree(&ab);
 }
 
@@ -719,11 +722,13 @@ void editorCommandExecute(void) {
     if (E.dirty) {
       editorSetStatusMessage("Unsaved changes, use :q! to force");
     } else {
-      write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+      ssize_t ignored = write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+      (void)ignored;
       exit(0);
     }
   } else if (strcmp(cmd, "q!") == 0) {
-    write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+    ssize_t ignored = write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+    (void)ignored;
     exit(0);
   } else if (strcmp(cmd, "w") == 0) {
     editorSave();
@@ -740,7 +745,8 @@ void editorCommandExecute(void) {
     }
   } else if (strcmp(cmd, "wq") == 0 || strcmp(cmd, "x") == 0) {
     if (editorSave() == 0) {
-      write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+      ssize_t ignored = write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7);
+      (void)ignored;
       exit(0);
     }
   } else if (strncmp(cmd, "e ", 2) == 0) {
