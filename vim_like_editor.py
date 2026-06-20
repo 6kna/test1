@@ -117,7 +117,7 @@ class EditorCore:
 
     def save(self) -> bool:
         if not self.filename:
-            self.status_message = "No filename"
+            self.status_message = "Cannot save: no filename provided"
             return False
         with open(self.filename, "w", encoding="utf-8") as f:
             f.write("\n".join(self.lines))

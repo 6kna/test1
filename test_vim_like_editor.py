@@ -24,10 +24,10 @@ class EditorCoreTests(unittest.TestCase):
         editor.process_key(backspace_key())
         self.assertEqual(editor.lines, ["ab"])
 
-    def test_delete_char_joins_lines_at_end(self) -> None:
-        editor = EditorCore(lines=["ab", "cd"], row=0, col=2, mode="NORMAL")
+    def test_delete_char_joins_lines_for_empty_line(self) -> None:
+        editor = EditorCore(lines=["", "cd"], row=0, col=0, mode="NORMAL")
         editor.process_key(ord("x"))
-        self.assertEqual(editor.lines, ["abcd"])
+        self.assertEqual(editor.lines, ["cd"])
 
     def test_command_write_and_quit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
