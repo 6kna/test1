@@ -1,5 +1,4 @@
 #define _DEFAULT_SOURCE
-#define _BSD_SOURCE
 #define _GNU_SOURCE
 
 #include <ctype.h>
@@ -18,6 +17,7 @@
 #define CTRL_KEY(k) ((k)&0x1f)
 #define MAX_UNDO 200
 #define TAB_STOP 8
+#define LINE_NUMBER_WIDTH 5
 
 enum EditorKey {
   ARROW_LEFT = 1000,
@@ -224,8 +224,10 @@ Snapshot editorMakeSnapshot(void) {
   s.line_count = E.numrows;
   s.cx = E.cx;
   s.cy = E.cy;
-  s.lines = calloc((size_t)s.line_count, sizeof(char *));
-  if (!s.lines) die("calloc");
+  if (s.line_count > 0) {
+    s.lines = calloc((size_t)s.line_count, sizeof(char *));
+    if (!s.lines) die("calloc");
+  }
   for (int i = 0; i < s.line_count; i++) {
     s.lines[i] = strdup(E.row[i].chars);
     if (!s.lines[i]) die("strdup");
@@ -339,7 +341,13 @@ void editorDelRow(int at) {
   free(E.row[at].chars);
   memmove(&E.row[at], &E.row[at + 1], sizeof(erow) * (size_t)(E.numrows - at - 1));
   E.numrows--;
-  E.row = realloc(E.row, sizeof(erow) * (size_t)(E.numrows > 0 ? E.numrows : 1));
+  if (E.numrows == 0) {
+    free(E.row);
+    E.row = NULL;
+  } else {
+    E.row = realloc(E.row, sizeof(erow) * (size_t)E.numrows);
+    if (!E.row) die("realloc");
+  }
   editorUpdateRowIndexFrom(at);
   E.dirty++;
 }
@@ -528,14 +536,14 @@ void editorDrawRows(abuf *ab) {
       }
     } else {
       char lineno[16];
-      int ln_len = snprintf(lineno, sizeof(lineno), "%4d ", filerow + 1);
+      int ln_len = snprintf(lineno, sizeof(lineno), "%*d ", LINE_NUMBER_WIDTH - 1, filerow + 1);
       abAppend(ab, "\x1b[90m", 5);
       abAppend(ab, lineno, ln_len);
       abAppend(ab, "\x1b[39m", 5);
 
       int len = E.row[filerow].size - E.coloff;
       if (len < 0) len = 0;
-      int avail = E.screencols - 5;
+      int avail = E.screencols - LINE_NUMBER_WIDTH;
       if (len > avail) len = avail;
       if (len > 0) abAppend(ab, &E.row[filerow].chars[E.coloff], len);
     }
@@ -583,7 +591,7 @@ void editorRefreshScreen(void) {
   editorDrawStatusBar(&ab);
   editorDrawMessageBar(&ab);
 
-  int cx = (E.rx - E.coloff) + 6;
+  int cx = (E.rx - E.coloff) + LINE_NUMBER_WIDTH + 1;
   int cy = (E.cy - E.rowoff) + 1;
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", cy, cx);
@@ -638,6 +646,7 @@ void editorMoveCursor(int key) {
 void editorJumpWordForward(void) {
   while (E.cy < E.numrows) {
     erow *row = &E.row[E.cy];
+    while (E.cx < row->size && isalnum((unsigned char)row->chars[E.cx])) E.cx++;
     while (E.cx < row->size && !isalnum((unsigned char)row->chars[E.cx])) E.cx++;
     if (E.cx < row->size) return;
     if (E.cy + 1 >= E.numrows) return;
@@ -651,15 +660,20 @@ void editorJumpWordBackward(void) {
   if (E.cx == 0 && E.cy == 0) return;
   while (1) {
     if (E.cx == 0) {
+      if (E.cy == 0) return;
       E.cy--;
       E.cx = E.row[E.cy].size;
     }
-    E.cx--;
-    if (isalnum((unsigned char)E.row[E.cy].chars[E.cx])) {
-      while (E.cx > 0 && isalnum((unsigned char)E.row[E.cy].chars[E.cx - 1])) E.cx--;
-      return;
+
+    while (E.cx > 0) {
+      E.cx--;
+      if (isalnum((unsigned char)E.row[E.cy].chars[E.cx])) {
+        while (E.cx > 0 && isalnum((unsigned char)E.row[E.cy].chars[E.cx - 1])) E.cx--;
+        return;
+      }
     }
-    if (E.cy == 0 && E.cx == 0) return;
+
+    if (E.cy == 0) return;
   }
 }
 
