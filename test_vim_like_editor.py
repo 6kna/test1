@@ -24,7 +24,7 @@ class EditorCoreTests(unittest.TestCase):
         editor.process_key(backspace_key())
         self.assertEqual(editor.lines, ["ab"])
 
-    def test_delete_char_joins_lines_for_empty_line(self) -> None:
+    def test_x_joins_with_next_line_when_line_is_empty(self) -> None:
         editor = EditorCore(lines=["", "cd"], row=0, col=0, mode="NORMAL")
         editor.process_key(ord("x"))
         self.assertEqual(editor.lines, ["cd"])
@@ -38,7 +38,7 @@ class EditorCoreTests(unittest.TestCase):
             should_quit = editor.execute_command()
             self.assertTrue(should_quit)
             with open(path, "r", encoding="utf-8") as f:
-                self.assertEqual(f.read(), "hello")
+                self.assertEqual(f.read(), "hello\n")
 
     def test_q_refuses_with_unsaved_changes(self) -> None:
         editor = EditorCore(lines=["x"], dirty=True)
