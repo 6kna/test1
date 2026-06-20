@@ -20,9 +20,14 @@ class EditorCoreTests(unittest.TestCase):
         editor.process_key(10)  # enter
         editor.process_key(ord("c"))
         self.assertEqual(editor.lines, ["ab", "c"])
-        editor.process_key(curses_key_backspace())
-        editor.process_key(curses_key_backspace())
+        editor.process_key(backspace_key())
+        editor.process_key(backspace_key())
         self.assertEqual(editor.lines, ["ab"])
+
+    def test_delete_char_joins_lines_at_end(self) -> None:
+        editor = EditorCore(lines=["ab", "cd"], row=0, col=2, mode="NORMAL")
+        editor.process_key(ord("x"))
+        self.assertEqual(editor.lines, ["abcd"])
 
     def test_command_write_and_quit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -44,7 +49,7 @@ class EditorCoreTests(unittest.TestCase):
         self.assertIn("Unsaved changes", editor.status_message)
 
 
-def curses_key_backspace() -> int:
+def backspace_key() -> int:
     return 127
 
 

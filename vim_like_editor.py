@@ -28,7 +28,22 @@ class EditorCore:
 
     def _clamp_cursor(self) -> None:
         self.row = max(0, min(self.row, len(self.lines) - 1))
-        self.col = max(0, min(self.col, len(self.lines[self.row])))
+        line_len = len(self.lines[self.row])
+        if self.mode == "NORMAL":
+            max_col = line_len - 1 if line_len > 0 else 0
+        else:
+            max_col = line_len
+        self.col = max(0, min(self.col, max_col))
+
+    @staticmethod
+    def _printable_char_for_key(key: int) -> str | None:
+        if key < 0 or key > 255:
+            return None
+        try:
+            ch = chr(key)
+        except ValueError:
+            return None
+        return ch if ch.isprintable() else None
 
     def move_left(self) -> None:
         self.col -= 1
@@ -165,8 +180,10 @@ class EditorCore:
             self.backspace()
         elif key in (10, 13):
             self.newline()
-        elif 0 <= key <= 255 and chr(key).isprintable():
-            self.insert_char(chr(key))
+        else:
+            ch = self._printable_char_for_key(key)
+            if ch is not None:
+                self.insert_char(ch)
         return False
 
     def _process_command(self, key: int) -> bool:
@@ -179,8 +196,9 @@ class EditorCore:
             return False
         if key in (10, 13):
             return self.execute_command()
-        if 0 <= key <= 255 and chr(key).isprintable():
-            self.command_buffer += chr(key)
+        ch = self._printable_char_for_key(key)
+        if ch is not None:
+            self.command_buffer += ch
             self.status_message = f":{self.command_buffer}"
         return False
 
@@ -192,7 +210,7 @@ def _draw(stdscr: "curses._CursesWindow", editor: EditorCore) -> None:
     for i, line in enumerate(editor.lines[:max_rows]):
         stdscr.addnstr(i, 0, line, width - 1)
 
-    status = f"{editor.mode} | {editor.filename or '[No Name]'} | {editor.status_message}"
+    status = f"{editor.filename or '[No Name]'} | {editor.status_message}"
     stdscr.attron(curses.A_REVERSE)
     stdscr.addnstr(height - 1, 0, status.ljust(width), width - 1)
     stdscr.attroff(curses.A_REVERSE)

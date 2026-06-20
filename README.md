@@ -18,12 +18,11 @@ This repository now contains a small terminal text editor inspired by vim/neovim
 ## Run
 
 ```bash
-python /home/runner/work/test1/test1/vim_like_editor.py [optional-file]
+python vim_like_editor.py [optional-file]
 ```
 
 ## Tests
 
 ```bash
-cd /home/runner/work/test1/test1
 python -m unittest test_vim_like_editor.py
 ```
