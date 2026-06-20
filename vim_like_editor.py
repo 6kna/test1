@@ -226,7 +226,7 @@ def _draw(stdscr: "curses._CursesWindow", editor: EditorCore) -> None:
 
     editor.clamp_cursor()
     cursor_y = min(editor.row, max_rows - 1)
-    cursor_x = min(editor.col, max(0, width - 2))
+    cursor_x = min(editor.col, max(0, width - 1))
     stdscr.move(cursor_y, cursor_x)
     stdscr.refresh()
 

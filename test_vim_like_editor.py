@@ -29,6 +29,11 @@ class EditorCoreTests(unittest.TestCase):
         editor.process_key(ord("x"))
         self.assertEqual(editor.lines, ["cd"])
 
+    def test_delete_char_within_line(self) -> None:
+        editor = EditorCore(lines=["abcd"], row=0, col=1, mode="NORMAL")
+        editor.process_key(ord("x"))
+        self.assertEqual(editor.lines, ["acd"])
+
     def test_command_write_and_quit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "sample.txt")
