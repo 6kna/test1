@@ -24,7 +24,7 @@ class EditorCoreTests(unittest.TestCase):
         editor.process_key(backspace_key())
         self.assertEqual(editor.lines, ["ab"])
 
-    def test_x_joins_with_next_line_when_line_is_empty(self) -> None:
+    def test_delete_char_joins_lines_when_current_line_empty(self) -> None:
         editor = EditorCore(lines=["", "cd"], row=0, col=0, mode="NORMAL")
         editor.process_key(ord("x"))
         self.assertEqual(editor.lines, ["cd"])
